@@ -29,6 +29,7 @@ import java.lang.reflect.Method;
 import java.net.ConnectException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -309,6 +310,8 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
 
 	private String pathLogSMTP;
 
+	private String attributeNameLogSMTP;
+
 	@Inject
 	public void setDomainList(@Named("domainlist") DomainList domainList) {
 		this.domainList = domainList;
@@ -333,6 +336,8 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
 				.valueOf(getInitParameter("debug"));
 
 		pathLogSMTP = getInitParameter("pathLogSMTP");
+
+		attributeNameLogSMTP = getInitParameter("attributeNameLogSMTP");
 
 		logAdapter = new MailetContextLog(getMailetContext(), isDebug);
 
@@ -862,24 +867,29 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
 					MailQueueItem queueItem = queue.deQueue();
 					Mail mail = queueItem.getMail();
 
-					if (pathLogSMTP != null) {
+					if (pathLogSMTP != null && attributeNameLogSMTP != null) {
 						try {
 							if (!pathLogSMTP.endsWith("/")) {
 								pathLogSMTP = pathLogSMTP + "/";
 							}
 
-							String hasgUnique = mail.getAttribute(
-									"iCarta-Hash-Unique").toString();
-							String filename = pathLogSMTP + "smtp-"
-									+ hasgUnique + ".log";
+							Object attribute = mail
+									.getAttribute(attributeNameLogSMTP);
 
-							log("#### FILENAME = " + filename);
+							if (attribute != null) {
+								String fileName = attribute.toString();
 
-							File file = new File(filename);
-							session.setDebugOut(new PrintStream(file));
-
+								String logName = pathLogSMTP + "smtp-"
+										+ fileName + ".log";
+								log("FILENAME: " + logName);
+								File file = new File(logName);
+								session.setDebugOut(new PrintStream(file));
+							} else {
+								log("FILENAME: attribute not found - "
+										+ attributeNameLogSMTP);
+							}
 						} catch (Exception e) {
-							e.printStackTrace();
+							log("Error to set file.", e.getCause());
 						}
 					}
 
@@ -892,6 +902,11 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
 							log(message);
 						}
 
+						String initDeliverLog = "BEGIN DELIVER AT "
+								+ new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+										.format(new Date());
+						session.getDebugOut().println(initDeliverLog);
+
 						// Deliver message
 						if (deliver(mail, session)) {
 							// Message was successfully delivered/fully
@@ -899,7 +914,18 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
 							// delete it
 							LifecycleUtil.dispose(mail);
 							// workRepository.remove(key);
+							session.getDebugOut().println(
+									"END DELIVER AT "
+											+ new SimpleDateFormat(
+													"yyyy-MM-dd HH:mm:ss")
+													.format(new Date()));
 						} else {
+							session.getDebugOut().println(
+									"RETRY DELIVER AT "
+											+ new SimpleDateFormat(
+													"yyyy-MM-dd HH:mm:ss")
+													.format(new Date()));
+
 							// Something happened that will delay delivery.
 							// Store it back in the retry repository.
 							// workRepository.store(mail);
@@ -1206,6 +1232,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
 							.append(props.get("mail.smtp.from"))
 							.append(" for ").append(mail.getRecipients());
 					log(logMessageBuffer.toString());
+
 					return true;
 				} catch (SendFailedException sfe) {
 					logSendFailedException(sfe);
