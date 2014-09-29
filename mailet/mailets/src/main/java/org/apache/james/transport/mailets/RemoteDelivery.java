@@ -876,18 +876,27 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
 							Object attribute = mail
 									.getAttribute(attributeNameLogSMTP);
 
+							File file;
 							if (attribute != null) {
 								String fileName = attribute.toString();
 
 								String logName = pathLogSMTP + "smtp-"
 										+ fileName + ".log";
 								log("FILENAME: " + logName);
-								File file = new File(logName);
+								file = new File(logName);
 								session.setDebugOut(new PrintStream(file));
 							} else {
+								// String logName = pathLogSMTP +
+								// "/noname/smtp-"
+								// + mail.getName() + ".log";
+								// file = new File(logName);
+								file = new File("/tmp/smtp-noname.log");
 								log("FILENAME: attribute not found - "
 										+ attributeNameLogSMTP);
 							}
+
+							session.setDebugOut(new PrintStream(file));
+
 						} catch (Exception e) {
 							log("Error to set file.", e.getCause());
 						}
@@ -902,7 +911,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
 							log(message);
 						}
 
-						String initDeliverLog = "BEGIN DELIVER AT "
+						String initDeliverLog = "\nBEGIN DELIVER AT "
 								+ new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 										.format(new Date());
 						session.getDebugOut().println(initDeliverLog);
@@ -915,13 +924,13 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
 							LifecycleUtil.dispose(mail);
 							// workRepository.remove(key);
 							session.getDebugOut().println(
-									"END DELIVER AT "
+									"\nEND DELIVER AT "
 											+ new SimpleDateFormat(
 													"yyyy-MM-dd HH:mm:ss")
 													.format(new Date()));
 						} else {
 							session.getDebugOut().println(
-									"RETRY DELIVER AT "
+									"\nRETRY DELIVER AT "
 											+ new SimpleDateFormat(
 													"yyyy-MM-dd HH:mm:ss")
 													.format(new Date()));
@@ -1039,8 +1048,12 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
 				// Lookup the possible targets
 				try {
 					targetServers = new MXHostAddressIterator(dnsServer
-							.findMXRecords(host).iterator(), dnsServer, false,
+							.findMXRecords(host).iterator(), 587, dnsServer, false,
 							logAdapter);
+					
+//					targetServers = new MXHostAddressIterator(dnsServer
+//							.findMXRecords(host).iterator(), dnsServer, false,
+//							logAdapter);
 				} catch (TemporaryResolutionException e) {
 					log("Temporary problem looking up mail server for host: "
 							+ host);
