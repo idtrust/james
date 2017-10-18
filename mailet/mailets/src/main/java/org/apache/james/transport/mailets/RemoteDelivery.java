@@ -582,7 +582,7 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
 	 * @return the next delay time to use, given the retry count
 	 */
 	private long getNextDelay(int retry_count) {
-		if (retry_count > delayTimes.length) {
+		if (retry_count <= 0 || retry_count > delayTimes.length) {
 			return DEFAULT_DELAY_TIME;
 		}
 		return delayTimes[retry_count - 1];
@@ -1047,13 +1047,12 @@ public class RemoteDelivery extends GenericMailet implements Runnable {
 
 				// Lookup the possible targets
 				try {
-					targetServers = new MXHostAddressIterator(dnsServer
-							.findMXRecords(host).iterator(), 587, dnsServer, false,
-							logAdapter);
-					
 //					targetServers = new MXHostAddressIterator(dnsServer
-//							.findMXRecords(host).iterator(), dnsServer, false,
+//							.findMXRecords(host).iterator(), 25, dnsServer, false,
 //							logAdapter);
+					
+					targetServers = new MXHostAddressIterator(dnsServer.findMXRecords(host).iterator(), dnsServer,
+							false, logAdapter);
 				} catch (TemporaryResolutionException e) {
 					log("Temporary problem looking up mail server for host: "
 							+ host);

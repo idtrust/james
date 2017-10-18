@@ -27,21 +27,32 @@ import org.apache.james.protocols.smtp.core.AbstractAuthRequiredToRelayRcptHook;
 
 public class AuthRequiredToRelayRcptHook extends AbstractAuthRequiredToRelayRcptHook {
 
-    private DomainList domains;
+	private DomainList domains;
 
-    @Inject
-    public void setDomainList(@Named("domainlist") DomainList domains) {
-        this.domains = domains;
-    }
+	@Inject
+	public void setDomainList(@Named("domainlist") DomainList domains) {
+		this.domains = domains;
+	}
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractAuthRequiredToRelayRcptHook#isLocalDomain(java.lang.String)
-     */
-    protected boolean isLocalDomain(String domain) {
-        try {
-            return domains.containsDomain(domain);
-        } catch (DomainListException e) {
-            return false;
-        }
-    }
+	/**
+	 * @see org.apache.james.protocols.smtp.core.AbstractAuthRequiredToRelayRcptHook#isLocalDomain(java.lang.String)
+	 */
+	protected boolean isLocalDomain(String domain) {
+		try {
+			System.out.println("Pesquisando domain para " + domain);
+			System.out.println("================");
+			System.out.println("Domains disponiveis: ");
+			for (String d : domains.getDomains()) {
+				System.out.println(d);
+				if (domain.endsWith(d)) {
+					System.out.println("Domain [" + domain + "] é local com domainlist [" + d + "]");
+					return true;
+				}
+			}
+			// return domains.containsDomain(domain);
+			return false;
+		} catch (DomainListException e) {
+			return false;
+		}
+	}
 }

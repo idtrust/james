@@ -55,13 +55,15 @@
     ===========================================================================
     -->
 
+    <import resource="classpath:META-INF/spring/amqp-queue-context.xml"/>
+
     <!-- 
       Alternative queue is FileMailQueueFactory - Can be used instead of the default one.
-    <import resource="classpath:META-INF/spring/file-queue-context.xml"/>
-     -->
+	    <import resource="classpath:META-INF/spring/file-queue-context.xml"/>
+    -->
 
     <!-- Default Mail Queue Factory is the ActiveMQMailQueueFactory -->
-    <import resource="classpath:META-INF/spring/activemq-queue-context.xml"/>
+    <!-- <import resource="classpath:META-INF/spring/activemq-queue-context.xml"/> -->
 
     <!-- Mailet Container -->
     <import resource="classpath:META-INF/spring/mailetcontainer-context.xml"/>
@@ -178,7 +180,8 @@
         <property name="jpaVendorAdapter" ref="vendorAdapter"/>
         <property name="persistenceXmlLocation" value="classpath:META-INF/persistence.xml"/>
     </bean>
-    <bean id="vendorAdapter" class="org.springframework.orm.jpa.vendor.OpenJpaVendorAdapter">
+    
+    <bean id="vendorAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
         <property name="database" value="${vendorAdapter.database}"/>
         <!-- set this to true for debugging purposes -->
         <property name="showSql" value="false"/>

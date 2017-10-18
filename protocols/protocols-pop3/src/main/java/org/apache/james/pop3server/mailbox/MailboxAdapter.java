@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.pop3server.mailbox;
 
+import java.awt.TrayIcon.MessageType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -40,173 +41,173 @@ import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 
 public class MailboxAdapter implements Mailbox {
 
-    private static abstract class POP3FetchGroup implements FetchGroup {
-        @Override
-        public Set<PartContentDescriptor> getPartContentDescriptors() {
-            return null;
-        }
-    }
+	private static abstract class POP3FetchGroup implements FetchGroup {
+		@Override
+		public Set<PartContentDescriptor> getPartContentDescriptors() {
+			return null;
+		}
+	}
 
-    private final static FetchGroup FULL_GROUP = new POP3FetchGroup() {
+	private final static FetchGroup FULL_GROUP = new POP3FetchGroup() {
 
-        @Override
-        public int content() {
-            return BODY_CONTENT | HEADERS;
-        }
+		@Override
+		public int content() {
+			return BODY_CONTENT | HEADERS;
+		}
 
-    };
+	};
 
-    private final static FetchGroup BODY_GROUP = new POP3FetchGroup() {
+	private final static FetchGroup BODY_GROUP = new POP3FetchGroup() {
 
-        @Override
-        public int content() {
-            return BODY_CONTENT;
-        }
+		@Override
+		public int content() {
+			return BODY_CONTENT;
+		}
 
-    };
+	};
 
-    private final static FetchGroup HEADERS_GROUP = new POP3FetchGroup() {
+	private final static FetchGroup HEADERS_GROUP = new POP3FetchGroup() {
 
-        @Override
-        public int content() {
-            return HEADERS;
-        }
-    };
+		@Override
+		public int content() {
+			return HEADERS;
+		}
+	};
 
-    private final static FetchGroup METADATA_GROUP = new POP3FetchGroup() {
+	private final static FetchGroup METADATA_GROUP = new POP3FetchGroup() {
 
-        @Override
-        public int content() {
-            return MINIMAL;
-        }
-    };
+		@Override
+		public int content() {
+			return MINIMAL;
+		}
+	};
 
-    private final MessageManager manager;
-    private final MailboxSession session;
+	private final MessageManager manager;
+	private final MailboxSession session;
 
-    private final MailboxManager mailboxManager;
+	private final MailboxManager mailboxManager;
 
-    public MailboxAdapter(MailboxManager mailboxManager, MessageManager manager, MailboxSession session) {
-        this.manager = manager;
-        this.session = session;
-        this.mailboxManager = mailboxManager;
-    }
+	public MailboxAdapter(MailboxManager mailboxManager, MessageManager manager, MailboxSession session) {
+		this.manager = manager;
+		this.session = session;
+		this.mailboxManager = mailboxManager;
+	}
 
-    @Override
-    public InputStream getMessageBody(String uid) throws IOException {
-        try {
-            mailboxManager.startProcessingRequest(session);
-            Iterator<MessageResult> results = manager.getMessages(MessageRange.one(new Long(uid)), BODY_GROUP, session);
-            if (results.hasNext()) {
-                return results.next().getBody().getInputStream();
-            } else {
-                return null;
-            }
-        } catch (MailboxException e) {
-            throw new IOException("Unable to retrieve message body for uid " + uid, e);
-        } finally {
-            mailboxManager.endProcessingRequest(session);
-        }
-    }
+	@Override
+	public InputStream getMessageBody(String uid) throws IOException {
+		try {
+			mailboxManager.startProcessingRequest(session);
+			Iterator<MessageResult> results = manager.getMessages(MessageRange.one(new Long(uid)), BODY_GROUP, session);
+			if (results.hasNext()) {
+				return results.next().getBody().getInputStream();
+			} else {
+				return null;
+			}
+		} catch (MailboxException e) {
+			throw new IOException("Unable to retrieve message body for uid " + uid, e);
+		} finally {
+			mailboxManager.endProcessingRequest(session);
+		}
+	}
 
-    @Override
-    public InputStream getMessageHeaders(String uid) throws IOException {
-        try {
-            mailboxManager.startProcessingRequest(session);
-            Iterator<MessageResult> results = manager.getMessages(MessageRange.one(new Long(uid)), HEADERS_GROUP,
-                    session);
-            if (results.hasNext()) {
-                return results.next().getHeaders().getInputStream();
-            } else {
-                return null;
-            }
-        } catch (MailboxException e) {
-            throw new IOException("Unable to retrieve message header for uid " + uid, e);
-        } finally {
-            mailboxManager.endProcessingRequest(session);
-        }
-    }
+	@Override
+	public InputStream getMessageHeaders(String uid) throws IOException {
+		try {
+			mailboxManager.startProcessingRequest(session);
+			Iterator<MessageResult> results = manager.getMessages(MessageRange.one(new Long(uid)), HEADERS_GROUP,
+					session);
+			if (results.hasNext()) {
+				return results.next().getHeaders().getInputStream();
+			} else {
+				return null;
+			}
+		} catch (MailboxException e) {
+			throw new IOException("Unable to retrieve message header for uid " + uid, e);
+		} finally {
+			mailboxManager.endProcessingRequest(session);
+		}
+	}
 
-    @Override
-    public InputStream getMessage(String uid) throws IOException {
-        try {
-            mailboxManager.startProcessingRequest(session);
-            Iterator<MessageResult> results = manager.getMessages(MessageRange.one(new Long(uid)), FULL_GROUP, session);
-            if (results.hasNext()) {
-                return results.next().getFullContent().getInputStream();
-            } else {
-                return null;
-            }
-        } catch (MailboxException e) {
-            throw new IOException("Unable to retrieve message for uid " + uid, e);
-        } finally {
-            mailboxManager.endProcessingRequest(session);
-        }
-    }
+	@Override
+	public InputStream getMessage(String uid) throws IOException {
+		try {
+			mailboxManager.startProcessingRequest(session);
+			Iterator<MessageResult> results = manager.getMessages(MessageRange.one(new Long(uid)), FULL_GROUP, session);
+			if (results.hasNext()) {
+				return results.next().getFullContent().getInputStream();
+			} else {
+				return null;
+			}
+		} catch (MailboxException e) {
+			throw new IOException("Unable to retrieve message for uid " + uid, e);
+		} finally {
+			mailboxManager.endProcessingRequest(session);
+		}
+	}
 
-    @Override
-    public List<MessageMetaData> getMessages() throws IOException {
-        try {
-            mailboxManager.startProcessingRequest(session);
-            Iterator<MessageResult> results = manager.getMessages(MessageRange.all(), METADATA_GROUP, session);
-            List<MessageMetaData> mList = new ArrayList<MessageMetaData>();
-            while (results.hasNext()) {
-                MessageResult result = results.next();
-                MessageMetaData metaData = new MessageMetaData(Long.toString(result.getUid()), result.getSize());
-                mList.add(metaData);
-            }
-            return Collections.unmodifiableList(mList);
-        } catch (MailboxException e) {
-            throw new IOException("Unable to retrieve messages", e);
-        } finally {
-            mailboxManager.endProcessingRequest(session);
-        }
-    }
+	@Override
+	public List<MessageMetaData> getMessages() throws IOException {
+		try {
+			mailboxManager.startProcessingRequest(session);
+			Iterator<MessageResult> results = manager.getMessages(MessageRange.all(), METADATA_GROUP, session);
+			List<MessageMetaData> mList = new ArrayList<MessageMetaData>();
+			while (results.hasNext()) {
+				MessageResult result = results.next();
+				MessageMetaData metaData = new MessageMetaData(Long.toString(result.getUid()), result.getSize());
+				mList.add(metaData);
+			}
+			return Collections.unmodifiableList(mList);
+		} catch (MailboxException e) {
+			throw new IOException("Unable to retrieve messages", e);
+		} finally {
+			mailboxManager.endProcessingRequest(session);
+		}
+	}
 
-    @Override
-    public void remove(String... uids) throws IOException {
-        List<Long> uidList = new ArrayList<Long>();
+	@Override
+	public void remove(String... uids) throws IOException {
+		List<Long> uidList = new ArrayList<Long>();
 
-        for (String uid : uids) {
-            uidList.add(new Long(uid));
-        }
+		for (String uid : uids) {
+			uidList.add(new Long(uid));
+		}
 
-        List<MessageRange> ranges = MessageRange.toRanges(uidList);
-        try {
-            mailboxManager.startProcessingRequest(session);
-            for (MessageRange range : ranges) {
-                manager.setFlags(new Flags(Flags.Flag.DELETED), true, false, range, session);
-                manager.expunge(range, session);
-            }
-        } catch (MailboxException e) {
-            throw new IOException("Unable to remove messages for ranges " + ranges);
-        } finally {
-            mailboxManager.endProcessingRequest(session);
-        }
-    }
+		List<MessageRange> ranges = MessageRange.toRanges(uidList);
+		try {
+			mailboxManager.startProcessingRequest(session);
+			for (MessageRange range : ranges) {
+				manager.setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.REPLACE, range, session);
+				manager.expunge(range, session);
+			}
+		} catch (MailboxException e) {
+			throw new IOException("Unable to remove messages for ranges " + ranges);
+		} finally {
+			mailboxManager.endProcessingRequest(session);
+		}
+	}
 
-    @Override
-    public String getIdentifier() throws IOException {
-        try {
-            mailboxManager.startProcessingRequest(session);
-            long validity = manager.getMetaData(false, session, MessageManager.MetaData.FetchGroup.NO_COUNT)
-                    .getUidValidity();
-            return Long.toString(validity);
-        } catch (MailboxException e) {
-            throw new IOException("Unable to retrieve indentifier for mailbox", e);
-        } finally {
-            mailboxManager.endProcessingRequest(session);
-        }
-    }
+	@Override
+	public String getIdentifier() throws IOException {
+		try {
+			mailboxManager.startProcessingRequest(session);
+			long validity = manager.getMetaData(false, session, MessageManager.MetaData.FetchGroup.NO_COUNT)
+					.getUidValidity();
+			return Long.toString(validity);
+		} catch (MailboxException e) {
+			throw new IOException("Unable to retrieve indentifier for mailbox", e);
+		} finally {
+			mailboxManager.endProcessingRequest(session);
+		}
+	}
 
-    @Override
-    public void close() throws IOException {
-        try {
-            mailboxManager.logout(session, true);
-        } catch (MailboxException e) {
-            throw new IOException("Unable to close mailbox", e);
-        } finally {
-            mailboxManager.endProcessingRequest(session);
-        }
-    }
+	@Override
+	public void close() throws IOException {
+		try {
+			mailboxManager.logout(session, true);
+		} catch (MailboxException e) {
+			throw new IOException("Unable to close mailbox", e);
+		} finally {
+			mailboxManager.endProcessingRequest(session);
+		}
+	}
 }

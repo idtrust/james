@@ -5,3 +5,5 @@ target
 var/
 log/
 /.project
+/bin/
+.classpath
