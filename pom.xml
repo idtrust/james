@@ -94,6 +94,7 @@
         <module>queue/queue-file</module>
         <module>queue/queue-jms</module>
         <module>queue/queue-activemq</module>
+        <module>queue/queue-amqp</module>
     </modules>
 
     <scm>
@@ -161,7 +162,7 @@
         <jcr.version>2.0</jcr.version>
         <tika-parsers.version>1.2</tika-parsers.version>
         <xbean-spring.version>3.12</xbean-spring.version>
-        <netty.version>3.3.1.Final</netty.version>
+        <netty.version>4.0.30.Final</netty.version>
         <geronimo-annotation-spec.version>1.0.1</geronimo-annotation-spec.version>
         <spring-osgi-extender.version>1.2.1</spring-osgi-extender.version>
         <org.osgi.core.version>5.0.0</org.osgi.core.version>
